@@ -1,30 +1,36 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const path = require("path");
 const cors = require("cors");
-require("dotenv").config();
+const connectDB = require("./config/db");
 
+const authRoutes = require("./routes/auth"); // Import auth.js route
+const dotenv = require("dotenv");
+
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json()); // Parse JSON requests
-
-// Database Connection
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Allow requests from your frontend
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+    credentials: true, // Include credentials if needed
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log("Error connecting to DB:", err));
+);
+app.use(express.json()); // Parse JSON bodies
 
-// Basic Route
-app.get("/", (req, res) => {
-  res.send("Backend is running!");
-});
+// Register auth routes
+app.use("/api/auth", authRoutes); // Now the signup route will be available at /api/auth/signup/user
 
-// Start Server
+// Serve static files from the uploads directory (for testing purposes)
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Connect to the database
+connectDB();
+
+// Start the server
 app.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`)
 );
